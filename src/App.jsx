@@ -12,6 +12,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UmkmDashboard from './pages/umkm/UmkmDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 import ActiveProjectPage from './pages/student/ActiveProjectPage';
+import MyApplicationsPage from './pages/student/MyApplicationsPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProductsPage from './pages/ProductsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -83,7 +84,7 @@ function AppContent() {
             </ProtectedRoute>
           } />
           
-          {/* Student Routes - ENHANCED */}
+          {/* Student Routes - ENHANCED with Applications Management */}
           <Route path="/student" element={
             <ProtectedRoute requiredUserType="student">
               <StudentDashboard />
@@ -93,6 +94,13 @@ function AppContent() {
           <Route path="/student/active-project" element={
             <ProtectedRoute requiredUserType="student">
               <ActiveProjectPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* NEW: Dedicated route for My Applications */}
+          <Route path="/student/applications" element={
+            <ProtectedRoute requiredUserType="student">
+              <MyApplicationsPage />
             </ProtectedRoute>
           } />
           
