@@ -84,15 +84,15 @@ function AppContent() {
           } />
           
           {/* Student Routes - ENHANCED */}
-          <Route path="/student/*" element={
+          <Route path="/student" element={
             <ProtectedRoute requiredUserType="student">
-              <Routes>
-                <Route index element={<StudentDashboard />} />
-                <Route path="dashboard" element={<StudentDashboard />} />
-                <Route path="active-project" element={<ActiveProjectPage />} />
-                <Route path="projects" element={<ProjectsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
-              </Routes>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/student/active-project" element={
+            <ProtectedRoute requiredUserType="student">
+              <ActiveProjectPage />
             </ProtectedRoute>
           } />
           
