@@ -21,16 +21,21 @@ import {
   CheckCircle,
   ArrowRight,
   Target,
-  PlayCircle
+  PlayCircle,
+  XCircle,
+  Filter
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { studentsAPI } from '../../services/api';
+import MyApplicationsPage from './MyApplicationsPage';
 import toast from 'react-hot-toast';
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [activeProject, setActiveProject] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [recentApplications, setRecentApplications] = useState([]);
+  const [availableProjects, setAvailableProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -43,13 +48,18 @@ const StudentDashboard = () => {
       setLoading(true);
       
       // Fetch dashboard stats and active project in parallel
-      const [statsResponse, projectResponse] = await Promise.all([
-        studentsAPI.getDashboardStats(),
-        studentsAPI.getActiveProject()
+      const [statsResponse, projectResponse, applicationsResponse, opportunitiesResponse] = await Promise.all([
+        studentsAPI.getDashboardStats().catch(err => ({ data: {} })),
+        studentsAPI.getActiveProject().catch(err => ({ data: {} })),
+        studentsAPI.getMyApplications({ limit: 5 }).catch(err => ({ data: { applications: [] } })),
+        studentsAPI.getOpportunities({ limit: 5 }).catch(err => ({ data: { projects: [] } }))
       ]);
       
-      setDashboardStats(statsResponse);
-      setActiveProject(projectResponse.activeProject);
+      setDashboardStats(statsResponse.data || {});
+      setActiveProject(projectResponse.data?.activeProject || null);
+      setRecentApplications(applicationsResponse.data?.applications || []);
+      setAvailableProjects(opportunitiesResponse.data?.projects || []);
+      
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Gagal memuat data dashboard');
@@ -57,46 +67,6 @@ const StudentDashboard = () => {
       setLoading(false);
     }
   };
-
-  const recentApplications = [
-    {
-      id: 1,
-      title: 'UI/UX Design untuk E-commerce',
-      company: 'Toko Fashion Online',
-      status: 'pending',
-      appliedDate: '2024-07-05',
-      budget: 'Rp 3.000.000'
-    },
-    {
-      id: 2,
-      title: 'Social Media Content Creator',
-      company: 'Warung Kopi Sederhana',
-      status: 'accepted',
-      appliedDate: '2024-07-03',
-      budget: 'Rp 2.000.000'
-    }
-  ];
-
-  const availableProjects = [
-    {
-      id: 1,
-      title: 'Website Development',
-      company: 'PT Digital Solusi',
-      budget: 'Rp 5.000.000 - Rp 8.000.000',
-      duration: '2 bulan',
-      skills: ['React', 'Node.js', 'PostgreSQL'],
-      postedDate: '2024-07-06'
-    },
-    {
-      id: 2,
-      title: 'Mobile App Design',
-      company: 'Startup EdTech',
-      budget: 'Rp 4.000.000 - Rp 6.000.000',
-      duration: '6 minggu',
-      skills: ['Figma', 'UI/UX', 'Prototyping'],
-      postedDate: '2024-07-05'
-    }
-  ];
 
   const StatCard = ({ title, value, icon: Icon, color = "primary", change }) => (
     <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -219,6 +189,121 @@ const StudentDashboard = () => {
     );
   };
 
+  // Projects Tab Component
+  const ProjectsTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-gray-900">Cari Project</h2>
+        <button 
+          onClick={() => navigate('/projects')}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Lihat Semua Project
+        </button>
+      </div>
+      
+      <div className="grid gap-4">
+        {availableProjects.length === 0 ? (
+          <div className="text-center py-12">
+            <Search className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-600">Belum ada project tersedia saat ini</p>
+          </div>
+        ) : (
+          availableProjects.map((project) => (
+            <div key={project.id} className="bg-white p-6 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{project.title}</h3>
+                  <p className="text-gray-600 mb-2">{project.umkm?.umkmProfile?.business_name}</p>
+                  <p className="text-gray-700 text-sm mb-3 line-clamp-2">{project.description}</p>
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="w-4 h-4" />
+                      <span>Rp {project.budget_min?.toLocaleString('id-ID')} - Rp {project.budget_max?.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      <span>Deadline: {new Date(project.deadline).toLocaleDateString('id-ID')}</span>
+                    </div>
+                  </div>
+                  
+                  {project.required_skills && (
+                    <div className="flex flex-wrap gap-1">
+                      {project.required_skills.slice(0, 3).map((skill, index) => (
+                        <span key={index} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                          {skill}
+                        </span>
+                      ))}
+                      {project.required_skills.length > 3 && (
+                        <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                          +{project.required_skills.length - 3} lainnya
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <button 
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                  className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+                >
+                  Lihat Detail
+                  <ExternalLink className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  // Portfolio Tab Component
+  const PortfolioTab = () => (
+    <div className="text-center py-12">
+      <div className="w-12 h-12 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
+        <FileText className="w-6 h-6 text-gray-500" />
+      </div>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Portfolio Management</h3>
+      <p className="text-gray-600 mb-4">Kelola portfolio dan showcase skill Anda</p>
+      <button 
+        onClick={() => navigate('/profile')}
+        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        Update Portfolio
+      </button>
+    </div>
+  );
+
+  // Messages Tab Component
+  const MessagesTab = () => (
+    <div className="text-center py-12">
+      <div className="w-12 h-12 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
+        <MessageSquare className="w-6 h-6 text-gray-500" />
+      </div>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Pesan & Chat</h3>
+      <p className="text-gray-600">Komunikasi dengan UMKM dan kelola pesan Anda</p>
+    </div>
+  );
+
+  // Settings Tab Component
+  const SettingsTab = () => (
+    <div className="text-center py-12">
+      <div className="w-12 h-12 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
+        <Settings className="w-6 h-6 text-gray-500" />
+      </div>
+      <h3 className="text-lg font-medium text-gray-900 mb-2">Pengaturan Akun</h3>
+      <p className="text-gray-600 mb-4">Kelola preferensi dan pengaturan akun Anda</p>
+      <button 
+        onClick={() => navigate('/profile')}
+        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+      >
+        Buka Pengaturan
+      </button>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -255,8 +340,8 @@ const StudentDashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Active Project Card */}
-        <ActiveProjectCard />
+        {/* Active Project Card - Only show on overview tab */}
+        {activeTab === 'overview' && <ActiveProjectCard />}
         
         {/* Navigation Tabs */}
         <div className="mb-8">
@@ -285,7 +370,7 @@ const StudentDashboard = () => {
           </nav>
         </div>
 
-        {/* Overview Tab */}
+        {/* Tab Content */}
         {activeTab === 'overview' && (
           <div className="space-y-8">
             {/* Stats Grid */}
@@ -325,7 +410,7 @@ const StudentDashboard = () => {
               />
               <StatCard
                 title="Portfolio Views"
-                value={234}
+                value={dashboardStats?.portfolio_views || 234}
                 icon={Eye}
                 color="primary"
                 change={15}
@@ -336,31 +421,49 @@ const StudentDashboard = () => {
               {/* Recent Applications */}
               <div className="bg-white rounded-lg shadow-sm border">
                 <div className="p-6 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Aplikasi Terbaru</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium text-gray-900">Aplikasi Terbaru</h3>
+                    <button 
+                      onClick={() => setActiveTab('applications')}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      Lihat Semua
+                    </button>
+                  </div>
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
-                    {recentApplications.map((app) => (
-                      <div key={app.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{app.title}</h4>
-                          <p className="text-sm text-gray-600">{app.company}</p>
-                          <p className="text-sm text-gray-500">{app.budget}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            app.status === 'accepted' 
-                              ? 'bg-green-100 text-green-800'
-                              : app.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {app.status === 'accepted' ? 'Diterima' : 
-                             app.status === 'pending' ? 'Menunggu' : 'Ditolak'}
-                          </span>
-                        </div>
+                    {recentApplications.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Briefcase className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 text-sm">Belum ada aplikasi</p>
                       </div>
-                    ))}
+                    ) : (
+                      recentApplications.map((app) => (
+                        <div key={app.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{app.project?.title}</h4>
+                            <p className="text-sm text-gray-600">{app.project?.umkm?.umkmProfile?.business_name}</p>
+                            <p className="text-sm text-gray-500">Rp {app.proposed_budget?.toLocaleString('id-ID')}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              app.status === 'accepted' 
+                                ? 'bg-green-100 text-green-800'
+                                : app.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : app.status === 'rejected'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {app.status === 'accepted' ? 'Diterima' : 
+                               app.status === 'pending' ? 'Menunggu' : 
+                               app.status === 'rejected' ? 'Ditolak' : app.status}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -380,28 +483,40 @@ const StudentDashboard = () => {
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
-                    {availableProjects.map((project) => (
-                      <div key={project.id} className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-medium text-gray-900">{project.title}</h4>
-                          <button className="text-blue-600 hover:text-blue-700">
-                            <ExternalLink className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{project.company}</p>
-                        <p className="text-sm text-gray-900 mb-2">{project.budget}</p>
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {project.skills.map((skill, index) => (
-                            <span key={index} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Diposting {new Date(project.postedDate).toLocaleDateString('id-ID')}
-                        </p>
+                    {availableProjects.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Search className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 text-sm">Belum ada project tersedia</p>
                       </div>
-                    ))}
+                    ) : (
+                      availableProjects.map((project) => (
+                        <div key={project.id} className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-gray-900">{project.title}</h4>
+                            <button 
+                              onClick={() => navigate(`/projects/${project.id}`)}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{project.umkm?.umkmProfile?.business_name}</p>
+                          <p className="text-sm text-gray-900 mb-2">
+                            Rp {project.budget_min?.toLocaleString('id-ID')} - Rp {project.budget_max?.toLocaleString('id-ID')}
+                          </p>
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {project.required_skills?.slice(0, 3).map((skill, index) => (
+                              <span key={index} className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Diposting {new Date(project.created_at).toLocaleDateString('id-ID')}
+                          </p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -409,28 +524,12 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        {/* Other tabs placeholder */}
-        {activeTab !== 'overview' && (
-          <div className="text-center py-12">
-            <div className="w-12 h-12 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
-              {activeTab === 'projects' && <Search className="w-6 h-6 text-gray-500" />}
-              {activeTab === 'applications' && <Briefcase className="w-6 h-6 text-gray-500" />}
-              {activeTab === 'portfolio' && <FileText className="w-6 h-6 text-gray-500" />}
-              {activeTab === 'messages' && <MessageSquare className="w-6 h-6 text-gray-500" />}
-              {activeTab === 'settings' && <Settings className="w-6 h-6 text-gray-500" />}
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {activeTab === 'projects' && 'Cari Proyek'}
-              {activeTab === 'applications' && 'Aplikasi Saya'}
-              {activeTab === 'portfolio' && 'Portfolio'}
-              {activeTab === 'messages' && 'Pesan & Chat'}
-              {activeTab === 'settings' && 'Pengaturan Akun'}
-            </h3>
-            <p className="text-gray-600">
-              Fitur ini sedang dalam pengembangan
-            </p>
-          </div>
-        )}
+        {/* ENHANCED: Use dedicated components for each tab */}
+        {activeTab === 'projects' && <ProjectsTab />}
+        {activeTab === 'applications' && <MyApplicationsPage />}
+        {activeTab === 'portfolio' && <PortfolioTab />}
+        {activeTab === 'messages' && <MessagesTab />}
+        {activeTab === 'settings' && <SettingsTab />}
       </div>
     </div>
   );
