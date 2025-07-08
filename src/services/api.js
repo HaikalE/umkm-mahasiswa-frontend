@@ -90,6 +90,33 @@ export const studentsAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
+  
+  // ENHANCED: Active Project Management APIs
+  getActiveProject: () => api.get('/students/active-project'),
+  getActiveProjectDetails: () => api.get('/students/active-project/details'),
+  getActiveProjectCheckpoints: () => api.get('/students/active-project/checkpoints'),
+  submitCheckpoint: (checkpointId, formData) => {
+    return api.post(`/students/active-project/checkpoint/${checkpointId}/submit`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  getActiveProjectChats: (params) => api.get('/students/active-project/chats', { params }),
+  sendProjectMessage: (data) => api.post('/students/active-project/chat', data),
+  uploadProjectDeliverables: (formData) => {
+    return api.post('/students/active-project/deliverables', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  updateProjectStatus: (data) => api.put('/students/active-project/status', data),
+  requestProjectCompletion: (data) => api.post('/students/active-project/request-completion', data),
+  completeProject: () => api.post('/students/active-project/complete'),
+  
+  // Dashboard and other existing APIs
+  getDashboardStats: () => api.get('/students/dashboard/stats'),
+  getOpportunities: (params) => api.get('/students/dashboard/opportunities', { params }),
+  getMyApplications: (params) => api.get('/students/my-applications', { params }),
+  getMyProjects: (params) => api.get('/students/my-projects', { params }),
+  updateAvailability: (data) => api.put('/students/availability', data),
 };
 
 // Projects API endpoints
