@@ -10,7 +10,8 @@ import {
   Building2, 
   GraduationCap, 
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useLoading } from '../../hooks/useLoading';
@@ -24,7 +25,8 @@ const RegisterPage = () => {
     confirmPassword: '',
     full_name: '',
     phone: '',
-    user_type: ''
+    user_type: '',
+    business_type: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -34,6 +36,18 @@ const RegisterPage = () => {
   const { register } = useAuth();
   const { showLoading, hideLoading } = useLoading();
   const navigate = useNavigate();
+
+  // Business type options for UMKM
+  const businessTypeOptions = [
+    { value: 'kuliner', label: 'Kuliner & Makanan' },
+    { value: 'fashion', label: 'Fashion & Pakaian' },
+    { value: 'teknologi', label: 'Teknologi & Digital' },
+    { value: 'kerajinan', label: 'Kerajinan Tangan' },
+    { value: 'jasa', label: 'Jasa & Layanan' },
+    { value: 'perdagangan', label: 'Perdagangan' },
+    { value: 'pertanian', label: 'Pertanian & Peternakan' },
+    { value: 'lainnya', label: 'Lainnya' }
+  ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -81,6 +95,11 @@ const RegisterPage = () => {
       newErrors.confirmPassword = 'Konfirmasi password harus diisi';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Password tidak cocok';
+    }
+
+    // Validate business_type for UMKM
+    if (userType === 'umkm' && !formData.business_type) {
+      newErrors.business_type = 'Jenis bisnis harus dipilih';
     }
     
     if (!agreedToTerms) {
@@ -248,6 +267,40 @@ const RegisterPage = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Business Type - Only for UMKM */}
+                {userType === 'umkm' && (
+                  <div>
+                    <label htmlFor="business_type" className="form-label">
+                      Jenis Bisnis
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Briefcase className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <select
+                        id="business_type"
+                        name="business_type"
+                        value={formData.business_type}
+                        onChange={handleInputChange}
+                        className={`form-input pl-10 ${errors.business_type ? 'border-danger-500' : ''}`}
+                      >
+                        <option value="">Pilih jenis bisnis</option>
+                        {businessTypeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.business_type && (
+                      <div className="flex items-center mt-1">
+                        <AlertCircle className="w-4 h-4 text-danger-500 mr-1" />
+                        <span className="form-error">{errors.business_type}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Email */}
                 <div>
