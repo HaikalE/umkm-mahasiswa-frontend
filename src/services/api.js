@@ -75,6 +75,15 @@ export const umkmAPI = {
   getUMKMs: (params) => api.get('/umkm', { params }),
   getUMKMById: (id) => api.get(`/umkm/${id}`),
   verifyUMKM: (id) => api.post(`/umkm/${id}/verify`),
+  
+  // ENHANCED: Active Projects Management for UMKM
+  getActiveProjects: (params) => api.get('/umkm/active-projects', { params }),
+  getActiveProjectStats: () => api.get('/umkm/active-projects/stats'),
+  getActiveProjectDetails: (id) => api.get(`/umkm/active-projects/${id}`),
+  getActiveProjectChats: (id, params) => api.get(`/umkm/active-projects/${id}/chats`, { params }),
+  sendProjectMessage: (id, data) => api.post(`/umkm/active-projects/${id}/chat`, data),
+  reviewCheckpoint: (projectId, checkpointId, data) => api.post(`/umkm/active-projects/${projectId}/checkpoint/${checkpointId}/review`, data),
+  approveProjectCompletion: (id, data) => api.post(`/umkm/active-projects/${id}/complete`, data),
 };
 
 // Students API endpoints
@@ -91,7 +100,7 @@ export const studentsAPI = {
     });
   },
   
-  // ENHANCED: Active Project Management APIs
+  // ENHANCED: Active Project Management APIs (Updated with new backend endpoints)
   getActiveProject: () => api.get('/students/active-project'),
   getActiveProjectDetails: () => api.get('/students/active-project/details'),
   getActiveProjectCheckpoints: () => api.get('/students/active-project/checkpoints'),
@@ -107,9 +116,8 @@ export const studentsAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  updateProjectStatus: (data) => api.put('/students/active-project/status', data),
   requestProjectCompletion: (data) => api.post('/students/active-project/request-completion', data),
-  completeProject: () => api.post('/students/active-project/complete'),
+  getProjectPaymentInfo: () => api.get('/students/active-project/payment'),
   
   // Dashboard and other existing APIs
   getDashboardStats: () => api.get('/students/dashboard/stats'),
@@ -127,6 +135,13 @@ export const projectsAPI = {
   updateProject: (id, data) => api.put(`/projects/${id}`, data),
   deleteProject: (id) => api.delete(`/projects/${id}`),
   getMyProjects: () => api.get('/projects/my'),
+  uploadProjectAttachments: (id, formData) => {
+    return api.post(`/projects/${id}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  updateProjectStatus: (id, data) => api.patch(`/projects/${id}/status`, data),
+  selectStudent: (id, data) => api.patch(`/projects/${id}/select-student`, data),
 };
 
 // Products API endpoints
@@ -145,8 +160,15 @@ export const applicationsAPI = {
   getApplicationById: (id) => api.get(`/applications/${id}`),
   createApplication: (data) => api.post('/applications', data),
   updateApplication: (id, data) => api.put(`/applications/${id}`, data),
-  approveApplication: (id) => api.post(`/applications/${id}/approve`),
-  rejectApplication: (id) => api.post(`/applications/${id}/reject`),
+  withdrawApplication: (id) => api.delete(`/applications/${id}`),
+  reviewApplication: (id, data) => api.patch(`/applications/${id}/review`, data),
+  acceptApplication: (id, data) => api.patch(`/applications/${id}/accept`, data),
+  rejectApplication: (id, data) => api.patch(`/applications/${id}/reject`, data),
+  uploadApplicationAttachments: (id, formData) => {
+    return api.post(`/applications/${id}/attachments`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
   getMyApplications: () => api.get('/applications/my'),
 };
 
@@ -185,6 +207,30 @@ export const uploadsAPI = {
     });
   },
   deleteFile: (fileId) => api.delete(`/uploads/${fileId}`),
+};
+
+// Payment API endpoints
+export const paymentsAPI = {
+  getPayments: (params) => api.get('/payments', { params }),
+  createPayment: (data) => api.post('/payments', data),
+  getPaymentById: (id) => api.get(`/payments/${id}`),
+  updatePaymentStatus: (id, data) => api.patch(`/payments/${id}/status`, data),
+  processPayment: (data) => api.post('/payments/process', data),
+  getPaymentHistory: () => api.get('/payments/history'),
+};
+
+// Checkpoint API endpoints
+export const checkpointsAPI = {
+  getCheckpoints: (projectId) => api.get(`/checkpoints/project/${projectId}`),
+  createCheckpoint: (data) => api.post('/checkpoints', data),
+  updateCheckpoint: (id, data) => api.put(`/checkpoints/${id}`, data),
+  deleteCheckpoint: (id) => api.delete(`/checkpoints/${id}`),
+  submitCheckpoint: (id, formData) => {
+    return api.post(`/checkpoints/${id}/submit`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+  reviewCheckpoint: (id, data) => api.post(`/checkpoints/${id}/review`, data),
 };
 
 // Admin API endpoints
