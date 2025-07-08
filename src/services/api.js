@@ -5,7 +5,7 @@ const api = axios.create({
   baseURL: process.env.NODE_ENV === 'production' 
     ? 'https://your-backend-url.com/api' 
     : 'http://localhost:3000/api',
-  timeout: 10000,
+  timeout: 15000, // Increased timeout for better reliability
   headers: {
     'Content-Type': 'application/json',
   },
@@ -86,7 +86,7 @@ export const umkmAPI = {
   approveProjectCompletion: (id, data) => api.post(`/umkm/active-projects/${id}/complete`, data),
 };
 
-// Students API endpoints
+// Students API endpoints - ENHANCED with better application management
 export const studentsAPI = {
   getProfile: () => api.get('/students/profile'),
   updateProfile: (data) => api.put('/students/profile', data),
@@ -119,12 +119,16 @@ export const studentsAPI = {
   requestProjectCompletion: (data) => api.post('/students/active-project/request-completion', data),
   getProjectPaymentInfo: () => api.get('/students/active-project/payment'),
   
-  // Dashboard and other existing APIs
+  // Dashboard and Applications APIs - ENHANCED
   getDashboardStats: () => api.get('/students/dashboard/stats'),
   getOpportunities: (params) => api.get('/students/dashboard/opportunities', { params }),
   getMyApplications: (params) => api.get('/students/my-applications', { params }),
   getMyProjects: (params) => api.get('/students/my-projects', { params }),
   updateAvailability: (data) => api.put('/students/availability', data),
+  
+  // NEW: Enhanced application tracking
+  getApplicationStats: () => api.get('/students/applications/stats'),
+  getApplicationHistory: (params) => api.get('/students/applications/history', { params }),
 };
 
 // Projects API endpoints
@@ -142,6 +146,11 @@ export const projectsAPI = {
   },
   updateProjectStatus: (id, data) => api.patch(`/projects/${id}/status`, data),
   selectStudent: (id, data) => api.patch(`/projects/${id}/select-student`, data),
+  
+  // NEW: Enhanced project search and filtering
+  searchProjects: (params) => api.get('/projects/search', { params }),
+  getProjectsByCategory: (category, params) => api.get(`/projects/category/${category}`, { params }),
+  getFeaturedProjects: (params) => api.get('/projects/featured', { params }),
 };
 
 // Products API endpoints
@@ -154,7 +163,7 @@ export const productsAPI = {
   getMyProducts: () => api.get('/products/my'),
 };
 
-// Applications API endpoints
+// Applications API endpoints - ENHANCED with better error handling
 export const applicationsAPI = {
   getApplications: (params) => api.get('/applications', { params }),
   getApplicationById: (id) => api.get(`/applications/${id}`),
@@ -169,7 +178,13 @@ export const applicationsAPI = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  getMyApplications: () => api.get('/applications/my'),
+  getMyApplications: (params) => api.get('/applications/my', { params }),
+  
+  // NEW: Enhanced application management
+  getApplicationDetails: (id) => api.get(`/applications/${id}/details`),
+  updateApplicationStatus: (id, status, notes) => api.patch(`/applications/${id}/status`, { status, notes }),
+  getApplicationTimeline: (id) => api.get(`/applications/${id}/timeline`),
+  bulkWithdrawApplications: (applicationIds) => api.post('/applications/bulk-withdraw', { applicationIds }),
 };
 
 // Chat API endpoints
@@ -178,6 +193,11 @@ export const chatsAPI = {
   getMessages: (conversationId) => api.get(`/chats/${conversationId}/messages`),
   sendMessage: (data) => api.post('/chats/messages', data),
   markAsRead: (messageId) => api.post(`/chats/messages/${messageId}/read`),
+  
+  // NEW: Enhanced chat features
+  getUnreadCount: () => api.get('/chats/unread-count'),
+  searchMessages: (query, params) => api.get('/chats/search', { params: { q: query, ...params } }),
+  deleteMessage: (messageId) => api.delete(`/chats/messages/${messageId}`),
 };
 
 // Reviews API endpoints
@@ -186,6 +206,11 @@ export const reviewsAPI = {
   createReview: (data) => api.post('/reviews', data),
   updateReview: (id, data) => api.put(`/reviews/${id}`, data),
   deleteReview: (id) => api.delete(`/reviews/${id}`),
+  
+  // NEW: Enhanced review features
+  getReviewsByProject: (projectId) => api.get(`/reviews/project/${projectId}`),
+  getReviewsByUser: (userId) => api.get(`/reviews/user/${userId}`),
+  getReviewStats: (userId) => api.get(`/reviews/stats/${userId}`),
 };
 
 // Notifications API endpoints
@@ -194,6 +219,11 @@ export const notificationsAPI = {
   markAsRead: (id) => api.post(`/notifications/${id}/read`),
   markAllAsRead: () => api.post('/notifications/read-all'),
   deleteNotification: (id) => api.delete(`/notifications/${id}`),
+  
+  // NEW: Enhanced notification features
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  getNotificationsByType: (type) => api.get(`/notifications/type/${type}`),
+  updateNotificationSettings: (settings) => api.put('/notifications/settings', settings),
 };
 
 // Upload API endpoints
@@ -207,6 +237,20 @@ export const uploadsAPI = {
     });
   },
   deleteFile: (fileId) => api.delete(`/uploads/${fileId}`),
+  
+  // NEW: Enhanced file management
+  getFileInfo: (fileId) => api.get(`/uploads/${fileId}/info`),
+  updateFileMetadata: (fileId, metadata) => api.put(`/uploads/${fileId}/metadata`, metadata),
+  bulkUpload: (files, type = 'general') => {
+    const formData = new FormData();
+    files.forEach((file, index) => {
+      formData.append(`files`, file);
+    });
+    formData.append('type', type);
+    return api.post('/uploads/bulk', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
 };
 
 // Payment API endpoints
@@ -217,6 +261,12 @@ export const paymentsAPI = {
   updatePaymentStatus: (id, data) => api.patch(`/payments/${id}/status`, data),
   processPayment: (data) => api.post('/payments/process', data),
   getPaymentHistory: () => api.get('/payments/history'),
+  
+  // NEW: Enhanced payment features
+  getPaymentMethods: () => api.get('/payments/methods'),
+  addPaymentMethod: (data) => api.post('/payments/methods', data),
+  removePaymentMethod: (methodId) => api.delete(`/payments/methods/${methodId}`),
+  initiateRefund: (paymentId, data) => api.post(`/payments/${paymentId}/refund`, data),
 };
 
 // Checkpoint API endpoints
@@ -231,6 +281,11 @@ export const checkpointsAPI = {
     });
   },
   reviewCheckpoint: (id, data) => api.post(`/checkpoints/${id}/review`, data),
+  
+  // NEW: Enhanced checkpoint features
+  getCheckpointHistory: (id) => api.get(`/checkpoints/${id}/history`),
+  bulkUpdateCheckpoints: (projectId, updates) => api.put(`/checkpoints/project/${projectId}/bulk`, updates),
+  getCheckpointStats: (projectId) => api.get(`/checkpoints/project/${projectId}/stats`),
 };
 
 // Admin API endpoints
@@ -245,6 +300,12 @@ export const adminAPI = {
   getProjects: (params) => api.get('/admin/projects', { params }),
   getReports: (params) => api.get('/admin/reports', { params }),
   exportData: (type) => api.get(`/admin/export/${type}`, { responseType: 'blob' }),
+  
+  // NEW: Enhanced admin features
+  getUserActivity: (userId, params) => api.get(`/admin/users/${userId}/activity`, { params }),
+  getSystemHealth: () => api.get('/admin/system/health'),
+  getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
+  manageFeatureFlags: (flags) => api.put('/admin/feature-flags', flags),
 };
 
 // Analytics API endpoints
@@ -253,6 +314,62 @@ export const analyticsAPI = {
   getProjectStats: () => api.get('/analytics/projects'),
   getRevenueStats: () => api.get('/analytics/revenue'),
   getPerformanceMetrics: () => api.get('/analytics/performance'),
+  
+  // NEW: Enhanced analytics
+  getConversionRates: () => api.get('/analytics/conversion'),
+  getUserEngagement: (params) => api.get('/analytics/engagement', { params }),
+  getProjectSuccessRates: () => api.get('/analytics/project-success'),
+  getCustomAnalytics: (query) => api.post('/analytics/custom', query),
+};
+
+// NEW: Matching API endpoints
+export const matchingAPI = {
+  getStudentMatches: (params) => api.get('/matching/students', { params }),
+  getProjectRecommendations: (params) => api.get('/matching/recommendations', { params }),
+  updateMatchingPreferences: (data) => api.put('/matching/preferences', data),
+  getMatchingScore: (projectId) => api.get(`/matching/score/${projectId}`),
+};
+
+// NEW: Pricing API endpoints
+export const pricingAPI = {
+  getPricingSuggestions: (projectData) => api.post('/pricing/suggestions', projectData),
+  getMarketRates: (category, params) => api.get(`/pricing/market-rates/${category}`, { params }),
+  updatePricingTiers: (data) => api.put('/pricing/tiers', data),
+  getPricingHistory: (params) => api.get('/pricing/history', { params }),
+};
+
+// Utility function for handling API errors
+export const handleApiError = (error) => {
+  if (error.response) {
+    // Server responded with error status
+    const { status, data } = error.response;
+    switch (status) {
+      case 400:
+        return data.message || 'Bad request';
+      case 401:
+        return 'Unauthorized - Please login again';
+      case 403:
+        return 'Forbidden - You do not have permission';
+      case 404:
+        return 'Resource not found';
+      case 409:
+        return 'Conflict - Resource already exists';
+      case 422:
+        return data.message || 'Validation error';
+      case 429:
+        return 'Too many requests - Please try again later';
+      case 500:
+        return 'Internal server error';
+      default:
+        return data.message || 'An error occurred';
+    }
+  } else if (error.request) {
+    // Network error
+    return 'Network error - Please check your connection';
+  } else {
+    // Other error
+    return error.message || 'An unexpected error occurred';
+  }
 };
 
 export default api;
